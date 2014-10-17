@@ -1,13 +1,9 @@
 'use strict';
 
-var spawn  = require ('child_process').spawn;
-
-exports.spawn = function (bin, args,
-                          callbackDone,
-                          callbackStdout,
-                          callbackStderr) {
-  var prog = spawn (bin, args);
-
+var exec = function (prog,
+                     callbackDone,
+                     callbackStdout,
+                     callbackStderr) {
   prog.stdout.on ('data', function (data) {
     data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
       if (line.trim ().length) {
@@ -45,4 +41,26 @@ exports.spawn = function (bin, args,
       callbackDone (true);
     }
   });
+};
+
+exports.spawn = function (bin, args,
+                          callbackDone,
+                          callbackStdout,
+                          callbackStderr) {
+  var spawn  = require ('child_process').spawn;
+  var prog = spawn (bin, args);
+
+  exec (prog, callbackDone, callbackStdout, callbackStderr);
+  return prog;
+};
+
+exports.fork = function (bin, args, opts,
+                         callbackDone,
+                         callbackStdout,
+                         callbackStderr) {
+  var fork = require ('child_process').fork;
+  var prog = fork (bin, args, opts);
+
+  exec (prog, callbackDone, callbackStdout, callbackStderr);
+  return prog;
 };
