@@ -1,7 +1,7 @@
 'use strict';
 
 var exec = function (prog,
-                     callbackDone,
+                     callback,
                      callbackStdout,
                      callbackStderr) {
   prog.stdout.on ('data', function (data) {
@@ -29,38 +29,36 @@ var exec = function (prog,
   });
 
   prog.on ('error', function (data) {
-    console.log (data);
-
-    if (callbackDone) {
-      callbackDone (false);
+    if (callback) {
+      callback (data);
     }
   });
 
-  prog.on ('close', function (code) { /* jshint ignore:line */
-    if (callbackDone) {
-      callbackDone (true);
+  prog.on ('close', function (code) {
+    if (callback) {
+      callback (null, code);
     }
   });
 };
 
 exports.spawn = function (bin, args,
-                          callbackDone,
+                          callback,
                           callbackStdout,
                           callbackStderr) {
   var spawn  = require ('child_process').spawn;
   var prog = spawn (bin, args);
 
-  exec (prog, callbackDone, callbackStdout, callbackStderr);
+  exec (prog, callback, callbackStdout, callbackStderr);
   return prog;
 };
 
 exports.fork = function (bin, args, opts,
-                         callbackDone,
+                         callback,
                          callbackStdout,
                          callbackStderr) {
   var fork = require ('child_process').fork;
   var prog = fork (bin, args, opts);
 
-  exec (prog, callbackDone, callbackStdout, callbackStderr);
+  exec (prog, callback, callbackStdout, callbackStderr);
   return prog;
 };
