@@ -45,12 +45,12 @@ var exec = function (prog,
   });
 };
 
-exports.spawn = function (bin, args,
+exports.spawn = function (bin, args, opts,
                           callback,
                           callbackStdout,
                           callbackStderr) {
   var spawn  = require ('child_process').spawn;
-  var prog = spawn (bin, args);
+  var prog = spawn (bin, args, opts);
 
   exec (prog, callback, callbackStdout, callbackStderr);
   return prog;
