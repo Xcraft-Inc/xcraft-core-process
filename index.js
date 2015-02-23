@@ -4,29 +4,33 @@ var exec = function (prog,
                      callback,
                      callbackStdout,
                      callbackStderr) {
-  prog.stdout.on ('data', function (data) {
-    data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
-      if (line.trim ().length) {
-        if (callbackStdout) {
-          callbackStdout (line);
-        } else {
-          console.log (line);
+  if (prog.stdout) {
+    prog.stdout.on ('data', function (data) {
+      data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
+        if (line.trim ().length) {
+          if (callbackStdout) {
+            callbackStdout (line);
+          } else {
+            console.log (line);
+          }
         }
-      }
+      });
     });
-  });
+  }
 
-  prog.stderr.on ('data', function (data) {
-    data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
-      if (line.trim ().length) {
-        if (callbackStderr) {
-          callbackStderr (line);
-        } else {
-          console.log (line);
+  if (prog.stderr) {
+    prog.stderr.on ('data', function (data) {
+      data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
+        if (line.trim ().length) {
+          if (callbackStderr) {
+            callbackStderr (line);
+          } else {
+            console.log (line);
+          }
         }
-      }
+      });
     });
-  });
+  }
 
   prog.on ('error', function (data) {
     if (callback) {
