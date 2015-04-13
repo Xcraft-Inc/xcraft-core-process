@@ -1,9 +1,9 @@
 'use strict';
 
-var exec = function (prog,
-                     callback,
-                     callbackStdout,
-                     callbackStderr) {
+var parse = function (prog,
+                      callback,
+                      callbackStdout,
+                      callbackStderr) {
   if (prog.stdout) {
     prog.stdout.on ('data', function (data) {
       data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
@@ -50,10 +50,41 @@ exports.spawn = function (bin, args, opts,
                           callbackStdout,
                           callbackStderr) {
   var spawn  = require ('child_process').spawn;
-  var prog = spawn (bin, args, opts);
+  var prog = null;
+  try {
+    prog = spawn (bin, args, opts);
+    parse (prog, callback, callbackStdout, callbackStderr);
+    return prog;
+  } catch (ex) {
+    /* Some installers fail with spawn for an unknown reason, then we try with
+     * the exec method instead.
+     */
+    if (ex.code !== 'UNKNOWN') {
+      throw ex;
+    }
 
-  exec (prog, callback, callbackStdout, callbackStderr);
-  return prog;
+    var exec = require ('child_process').exec;
+
+    exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
+      if (err) {
+        callback (err);
+      }
+
+      if (callbackStdout) {
+        callbackStdout (stdout);
+      } else {
+        console.log (stdout);
+      }
+
+      if (callbackStderr) {
+        callbackStderr (stderr);
+      } else {
+        console.log (stderr);
+      }
+    });
+
+    return null;
+  }
 };
 
 exports.fork = function (bin, args, opts,
@@ -63,6 +94,6 @@ exports.fork = function (bin, args, opts,
   var fork = require ('child_process').fork;
   var prog = fork (bin, args, opts);
 
-  exec (prog, callback, callbackStdout, callbackStderr);
+  parse (prog, callback, callbackStdout, callbackStderr);
   return prog;
 };
