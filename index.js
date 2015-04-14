@@ -1,34 +1,39 @@
 'use strict';
 
-var parse = function (prog,
-                      callback,
-                      callbackStdout,
-                      callbackStderr) {
+
+var parseLine = function (out, data) {
+  var lastNewline = false;
+  var lines = data.toString ().replace (/\r/g, '').split ('\n');
+
+  if (!lines[lines.length - 1].length) {
+    lastNewline = true;
+    lines.splice (-1, 1);
+  }
+
+  lines.forEach (function (line) {
+    var nl = lastNewline ? '\n' : '';
+    out (line + nl);
+  });
+};
+
+var parse = function (prog, parser, callback, callbackStdout, callbackStderr) {
   if (prog.stdout) {
     prog.stdout.on ('data', function (data) {
-      data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
-        if (line.trim ().length) {
-          if (callbackStdout) {
-            callbackStdout (line);
-          } else {
-            console.log (line);
-          }
-        }
-      });
+      if (callbackStdout) {
+        parseLine (callbackStdout, data);
+      } else {
+        parseLine (parser.onStdout, data);
+      }
     });
   }
 
   if (prog.stderr) {
     prog.stderr.on ('data', function (data) {
-      data.toString ().replace (/\r/g, '').split ('\n').forEach (function (line) {
-        if (line.trim ().length) {
-          if (callbackStderr) {
-            callbackStderr (line);
-          } else {
-            console.log (line);
-          }
-        }
-      });
+      if (callbackStderr) {
+        parseLine (callbackStderr, data);
+      } else {
+        parseLine (parser.onStderr, data);
+      }
     });
   }
 
@@ -39,61 +44,71 @@ var parse = function (prog,
   });
 
   prog.on ('close', function (code) {
-    if (callback) {
-      callback (null, code);
-    }
+    parser.onClose (code, callback);
   });
 };
 
-exports.spawn = function (bin, args, opts,
-                          callback,
-                          callbackStdout,
-                          callbackStderr) {
-  var spawn  = require ('child_process').spawn;
-  var prog = null;
-  try {
-    prog = spawn (bin, args, opts);
-    parse (prog, callback, callbackStdout, callbackStderr);
-    return prog;
-  } catch (ex) {
-    /* Some installers fail with spawn for an unknown reason, then we try with
-     * the exec method instead.
-     */
-    if (ex.code !== 'UNKNOWN') {
-      throw ex;
-    }
-
-    var exec = require ('child_process').exec;
-
-    exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
-      if (err) {
-        callback (err);
-      }
-
-      if (callbackStdout) {
-        callbackStdout (stdout);
-      } else {
-        console.log (stdout);
-      }
-
-      if (callbackStderr) {
-        callbackStderr (stderr);
-      } else {
-        console.log (stderr);
-      }
-    });
-
-    return null;
+module.exports = function (parsing, opts) {
+  if (!parsing) {
+    parsing = 'default';
   }
-};
 
-exports.fork = function (bin, args, opts,
-                         callback,
-                         callbackStdout,
-                         callbackStderr) {
-  var fork = require ('child_process').fork;
-  var prog = fork (bin, args, opts);
+  var parserFile = require ('./lib/loggers/' + parsing + '.js');
+  var parserOpts = opts || {};
 
-  parse (prog, callback, callbackStdout, callbackStderr);
-  return prog;
+  return {
+    spawn: function (bin, args, opts, callback, callbackStdout, callbackStderr) {
+      var spawn = require ('child_process').spawn;
+      var prog = null;
+      try {
+        prog = spawn (bin, args, opts);
+
+        parserOpts.pid = prog.pid;
+        var parser = parserFile (parserOpts);
+
+        parse (prog, parser, callback, callbackStdout, callbackStderr);
+        return prog;
+      } catch (ex) {
+        /* Some installers fail with spawn for an unknown reason, then we try with
+         * the exec method instead.
+         */
+        if (ex.code !== 'UNKNOWN') {
+          throw ex;
+        }
+
+        var exec = require ('child_process').exec;
+
+        exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
+          if (callbackStdout) {
+            parseLine (callbackStdout, stdout);
+          } else {
+            parseLine (parser.onStdout, stdout);
+          }
+
+          if (callbackStderr) {
+            parseLine (callbackStderr, stderr);
+          } else {
+            parseLine (parser.onStderr, stderr);
+          }
+
+          if (err) {
+            parser.onClose (err.code, callback);
+          }
+        });
+
+        return null;
+      }
+    },
+
+    fork: function (bin, args, opts, callback, callbackStdout, callbackStderr) {
+      var fork = require ('child_process').fork;
+      var prog = fork (bin, args, opts);
+
+      parserOpts.pid = prog.pid;
+      var parser = parserFile (parserOpts);
+
+      parse (prog, parser, callback, callbackStdout, callbackStderr);
+      return prog;
+    }
+  };
 };
