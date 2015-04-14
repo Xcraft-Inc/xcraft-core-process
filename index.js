@@ -63,6 +63,10 @@ module.exports = function (options) {
     options.forwarder = 'default';
   }
 
+  if (!options.hasOwnProperty ('parser')) {
+    options.parser = 'default';
+  }
+
   var loggerFile = require ('./lib/loggers/' + options.logger + '.js');
 
   return {
