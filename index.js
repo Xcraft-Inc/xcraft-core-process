@@ -72,12 +72,16 @@ module.exports = function (options) {
   return {
     spawn: function (bin, args, opts, callback, callbackStdout, callbackStderr) {
       var spawn = require ('child_process').spawn;
-      var prog = null;
+
+      options.args = args;
+
+      var logger = null;
+      var prog   = null;
       try {
         prog = spawn (bin, args, opts);
 
-        options.pid = prog.pid;
-        var logger = loggerFile (options);
+        options.pid  = prog.pid;
+        logger = loggerFile (options);
 
         parse (prog, logger, callback, callbackStdout, callbackStderr);
         return prog;
@@ -90,6 +94,8 @@ module.exports = function (options) {
         }
 
         var exec = require ('child_process').exec;
+
+        options.pid = -1;
 
         exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
           parseLine (function (line) {
@@ -119,7 +125,8 @@ module.exports = function (options) {
       var fork = require ('child_process').fork;
       var prog = fork (bin, args, opts);
 
-      options.pid = prog.pid;
+      options.pid  = prog.pid;
+      options.args = args;
       var logger = loggerFile (options);
 
       parse (prog, logger, callback, callbackStdout, callbackStderr);
