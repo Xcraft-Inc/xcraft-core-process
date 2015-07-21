@@ -96,6 +96,7 @@ module.exports = function (options) {
         var exec = require ('child_process').exec;
 
         options.pid = -1;
+        logger = loggerFile (options);
 
         exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
           parseLine (function (line) {
