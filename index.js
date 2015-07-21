@@ -80,7 +80,7 @@ module.exports = function (options) {
       try {
         prog = spawn (bin, args, opts);
 
-        options.pid  = prog.pid;
+        options.pid = prog.pid;
         logger = loggerFile (options);
 
         parse (prog, logger, callback, callbackStdout, callbackStderr);
