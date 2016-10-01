@@ -17,6 +17,8 @@ var parseLine = function (out, data) {
 };
 
 var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
+  let fired = false;
+
   if (prog.stdout) {
     prog.stdout.on ('data', function (data) {
       parseLine (function (line) {
@@ -42,11 +44,14 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
   prog.on ('error', function (data) {
     if (callback) {
       callback (data);
+      fired = true;
     }
   });
 
-  prog.on ('close', function (code) {
-    logger.onClose (code, callback);
+  prog.on ('exit', function (code) {
+    if (!fired) {
+      logger.onClose (code, callback);
+    }
   });
 };
 
