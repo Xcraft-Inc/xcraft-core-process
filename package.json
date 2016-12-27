@@ -1,6 +1,6 @@
 {
   "name": "xcraft-core-process",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Xcraft better process spawner",
   "main": "index.js",
   "engines": {
