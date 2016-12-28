@@ -2,17 +2,10 @@
 
 
 var parseLine = function (out, data) {
-  var lastNewline = false;
   var lines = data.toString ().replace (/\r/g, '').split ('\n');
 
-  if (!lines[lines.length - 1].length) {
-    lastNewline = true;
-    lines.splice (-1, 1);
-  }
-
-  lines.forEach (function (line) {
-    var nl = lastNewline ? '\n' : '';
-    out (line + nl);
+  lines.forEach (function (line, index) {
+    out (line + (index !== lines.length - 1 ? '\n' : ''));
   });
 };
 
