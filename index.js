@@ -1,5 +1,7 @@
 'use strict';
 
+const PrintBuffer = require ('./lib/printbuffer.js');
+
 
 var parseLine = function (out, data) {
   var lines = data.toString ().replace (/\r/g, '').split ('\n');
@@ -12,13 +14,20 @@ var parseLine = function (out, data) {
 var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
   let fired = false;
 
+  const buffer = {
+    stdout: new PrintBuffer (),
+    stderr: new PrintBuffer ()
+  };
+
   if (prog.stdout) {
     prog.stdout.on ('data', function (data) {
       parseLine (function (line) {
-        logger.onStdout (line);
-        if (callbackStdout) {
-          callbackStdout (line);
-        }
+        buffer.stdout.buf (line, (line) => {
+          logger.onStdout (line);
+          if (callbackStdout) {
+            callbackStdout (line);
+          }
+        });
       }, data);
     });
   }
@@ -26,10 +35,12 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
   if (prog.stderr) {
     prog.stderr.on ('data', function (data) {
       parseLine (function (line) {
-        logger.onStderr (line);
-        if (callbackStderr) {
-          callbackStderr (line);
-        }
+        buffer.stderr.buf (line, (line) => {
+          logger.onStderr (line);
+          if (callbackStderr) {
+            callbackStderr (line);
+          }
+        });
       }, data);
     });
   }
