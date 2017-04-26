@@ -14,7 +14,7 @@
     "process",
     "spawn"
   ],
-  "repository" : {
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/Xcraft-Inc/xcraft-core-process.git"
   },
@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/Xcraft-Inc/xcraft-core-process/issues"
   },
-  "homepage": "https://github.com/Xcraft-Inc/xcraft-core-process#readme"
+  "homepage": "https://github.com/Xcraft-Inc/xcraft-core-process#readme",
+  "devDependencies": {
+    "xcraft-dev-rules": "^0.1.6"
+  }
 }
