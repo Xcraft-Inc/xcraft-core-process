@@ -2,7 +2,6 @@
 
 const PrintBuffer = require ('./lib/printbuffer.js');
 
-
 var parseLine = function (out, data) {
   var lines = data.toString ().replace (/\r/g, '').split ('\n');
 
@@ -16,13 +15,13 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
 
   const buffer = {
     stdout: new PrintBuffer (),
-    stderr: new PrintBuffer ()
+    stderr: new PrintBuffer (),
   };
 
   if (prog.stdout) {
     prog.stdout.on ('data', function (data) {
       parseLine (function (line) {
-        buffer.stdout.buf (line, (line) => {
+        buffer.stdout.buf (line, line => {
           logger.onStdout (line);
           if (callbackStdout) {
             callbackStdout (line);
@@ -35,7 +34,7 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
   if (prog.stderr) {
     prog.stderr.on ('data', function (data) {
       parseLine (function (line) {
-        buffer.stderr.buf (line, (line) => {
+        buffer.stderr.buf (line, line => {
           logger.onStderr (line);
           if (callbackStderr) {
             callbackStderr (line);
@@ -79,13 +78,20 @@ module.exports = function (options) {
   var loggerFile = require ('./lib/loggers/' + options.logger + '.js');
 
   return {
-    spawn: function (bin, args, opts, callback, callbackStdout, callbackStderr) {
+    spawn: function (
+      bin,
+      args,
+      opts,
+      callback,
+      callbackStdout,
+      callbackStderr
+    ) {
       var spawn = require ('child_process').spawn;
 
       options.args = args;
 
       var logger = null;
-      var prog   = null;
+      var prog = null;
       try {
         prog = spawn (bin, args, opts);
 
@@ -107,7 +113,11 @@ module.exports = function (options) {
         options.pid = -1;
         logger = loggerFile (options);
 
-        exec ('"' + bin + '" ' + args.join (' '), function (err, stdout, stderr) {
+        exec ('"' + bin + '" ' + args.join (' '), function (
+          err,
+          stdout,
+          stderr
+        ) {
           parseLine (function (line) {
             logger.onStdout (line);
             if (callbackStdout) {
@@ -135,12 +145,12 @@ module.exports = function (options) {
       var fork = require ('child_process').fork;
       var prog = fork (bin, args, opts);
 
-      options.pid  = prog.pid;
+      options.pid = prog.pid;
       options.args = args;
       var logger = loggerFile (options);
 
       parse (prog, logger, callback, callbackStdout, callbackStderr);
       return prog;
-    }
+    },
   };
 };
