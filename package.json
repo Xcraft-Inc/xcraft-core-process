@@ -9,7 +9,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["xcraft", "process", "spawn"],
+  "keywords": [
+    "xcraft",
+    "process",
+    "spawn"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Xcraft-Inc/xcraft-core-process.git"
@@ -21,6 +25,9 @@
   },
   "homepage": "https://github.com/Xcraft-Inc/xcraft-core-process#readme",
   "devDependencies": {
-    "xcraft-dev-rules": "^0.4.0"
-  }
+    "prettier": "1.18.2",
+    "xcraft-dev-prettier": "^1.0.0",
+    "xcraft-dev-rules": "^1.0.2"
+  },
+  "prettier": "xcraft-dev-prettier"
 }
