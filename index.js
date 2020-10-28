@@ -51,7 +51,8 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
     }
   });
 
-  prog.on('exit', function (code) {
+  const closeEvent = prog.stdout || prog.stderr ? 'close' : 'exit';
+  prog.on(closeEvent, function (code) {
     if (!fired) {
       logger.onClose(code, callback);
     }
