@@ -77,8 +77,13 @@ module.exports = function (options) {
   }
 
   var loggerFile = require('./lib/loggers/' + options.logger + '.js');
+  let pid = -1;
 
   return {
+    getpid: () => {
+      return pid;
+    },
+
     spawn: function (
       bin,
       args,
@@ -96,7 +101,7 @@ module.exports = function (options) {
       try {
         prog = spawn(bin, args, opts);
 
-        options.pid = prog.pid;
+        options.pid = pid = prog.pid;
         logger = loggerFile(options);
 
         parse(prog, logger, callback, callbackStdout, callbackStderr);
@@ -142,7 +147,7 @@ module.exports = function (options) {
       var fork = require('child_process').fork;
       var prog = fork(bin, args, opts);
 
-      options.pid = prog.pid;
+      options.pid = pid = prog.pid;
       options.args = args;
       var logger = loggerFile(options);
 
