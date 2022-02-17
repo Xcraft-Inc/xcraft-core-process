@@ -2,15 +2,22 @@
 
 const PrintBuffer = require('./lib/printbuffer.js');
 
-var parseLine = function (out, data) {
-  var lines = data.toString().replace(/\r/g, '').split('\n');
+var parseLine = function (encoding, out, data) {
+  var lines = data.toString(encoding).replace(/\r/g, '').split('\n');
 
   lines.forEach(function (line, index) {
     out(line + (index !== lines.length - 1 ? '\n' : ''));
   });
 };
 
-var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
+var parse = function (
+  prog,
+  logger,
+  encoding,
+  callback,
+  callbackStdout,
+  callbackStderr
+) {
   let fired = false;
 
   const buffer = {
@@ -20,27 +27,35 @@ var parse = function (prog, logger, callback, callbackStdout, callbackStderr) {
 
   if (prog.stdout) {
     prog.stdout.on('data', function (data) {
-      parseLine(function (line) {
-        buffer.stdout.buf(line, (line) => {
-          logger.onStdout(line);
-          if (callbackStdout) {
-            callbackStdout(line);
-          }
-        });
-      }, data);
+      parseLine(
+        encoding,
+        function (line) {
+          buffer.stdout.buf(line, (line) => {
+            logger.onStdout(line);
+            if (callbackStdout) {
+              callbackStdout(line);
+            }
+          });
+        },
+        data
+      );
     });
   }
 
   if (prog.stderr) {
     prog.stderr.on('data', function (data) {
-      parseLine(function (line) {
-        buffer.stderr.buf(line, (line) => {
-          logger.onStderr(line);
-          if (callbackStderr) {
-            callbackStderr(line);
-          }
-        });
-      }, data);
+      parseLine(
+        encoding,
+        function (line) {
+          buffer.stderr.buf(line, (line) => {
+            logger.onStderr(line);
+            if (callbackStderr) {
+              callbackStderr(line);
+            }
+          });
+        },
+        data
+      );
     });
   }
 
@@ -95,6 +110,9 @@ module.exports = function (options) {
       var spawn = require('child_process').spawn;
 
       options.args = args;
+      options.encoding = opts.encoding;
+
+      delete opts.encoding;
 
       var logger = null;
       var prog = null;
@@ -104,7 +122,14 @@ module.exports = function (options) {
         options.pid = pid = prog.pid;
         logger = loggerFile(options);
 
-        parse(prog, logger, callback, callbackStdout, callbackStderr);
+        parse(
+          prog,
+          logger,
+          options.encoding,
+          callback,
+          callbackStdout,
+          callbackStderr
+        );
         return prog;
       } catch (ex) {
         /* Some installers fail with spawn for an unknown reason, then we try with
@@ -120,19 +145,27 @@ module.exports = function (options) {
         logger = loggerFile(options);
 
         exec('"' + bin + '" ' + args.join(' '), function (err, stdout, stderr) {
-          parseLine(function (line) {
-            logger.onStdout(line);
-            if (callbackStdout) {
-              callbackStdout(line);
-            }
-          }, stdout);
+          parseLine(
+            options.encoding,
+            function (line) {
+              logger.onStdout(line);
+              if (callbackStdout) {
+                callbackStdout(line);
+              }
+            },
+            stdout
+          );
 
-          parseLine(function (line) {
-            logger.onStderr(line);
-            if (callbackStderr) {
-              callbackStderr(line);
-            }
-          }, stderr);
+          parseLine(
+            options.encoding,
+            function (line) {
+              logger.onStderr(line);
+              if (callbackStderr) {
+                callbackStderr(line);
+              }
+            },
+            stderr
+          );
 
           if (err) {
             logger.onClose(err.code, callback);
@@ -151,7 +184,14 @@ module.exports = function (options) {
       options.args = args;
       var logger = loggerFile(options);
 
-      parse(prog, logger, callback, callbackStdout, callbackStderr);
+      parse(
+        prog,
+        logger,
+        options.encoding,
+        callback,
+        callbackStdout,
+        callbackStderr
+      );
       return prog;
     },
   };
