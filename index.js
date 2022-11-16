@@ -59,8 +59,24 @@ var parse = function (
     });
   }
 
+  const drain = () => {
+    if (buffer.stdout.data) {
+      logger.onStdout(buffer.stdout.data);
+      if (callbackStdout) {
+        callbackStdout(buffer.stdout.data);
+      }
+    }
+    if (buffer.stderr.data) {
+      logger.onStderr(buffer.stdout.data);
+      if (callbackStderr) {
+        callbackStderr(buffer.stdout.data);
+      }
+    }
+  };
+
   prog.on('error', function (data) {
     if (callback) {
+      drain();
       callback(data);
       fired = true;
     }
@@ -69,6 +85,7 @@ var parse = function (
   const closeEvent = prog.stdout || prog.stderr ? 'close' : 'exit';
   prog.on(closeEvent, function (code) {
     if (!fired) {
+      drain();
       logger.onClose(code, callback);
     }
   });
