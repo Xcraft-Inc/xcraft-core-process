@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/Xcraft-Inc/xcraft-core-process#readme",
   "dependencies": {
-    "ansi-regex": "^2.1.1"
+    "ansi-regex": "^5.0.1"
   },
   "devDependencies": {
     "prettier": "2.0.4",
