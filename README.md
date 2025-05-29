@@ -4,6 +4,16 @@
 
 Le module `xcraft-core-process` est une bibliothèque utilitaire qui améliore la gestion des processus dans l'écosystème Xcraft. Il fournit une abstraction au-dessus des fonctions natives de Node.js pour lancer des processus (`spawn`, `fork`, `exec`), avec des fonctionnalités avancées pour la gestion des flux de sortie, le logging et le parsing des résultats.
 
+## Sommaire
+
+- [Structure du module](#structure-du-module)
+- [Fonctionnement global](#fonctionnement-global)
+- [Exemples d'utilisation](#exemples-dutilisation)
+- [Interactions avec d'autres modules](#interactions-avec-dautres-modules)
+- [Configuration avancée](#configuration-avancée)
+- [Détails des sources](#détails-des-sources)
+- [Cas d'utilisation avancés](#cas-dutilisation-avancés)
+
 ## Structure du module
 
 Le module est organisé comme suit:
