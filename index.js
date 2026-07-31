@@ -67,9 +67,9 @@ var parse = function (
       }
     }
     if (buffer.stderr.data) {
-      logger.onStderr(buffer.stdout.data);
+      logger.onStderr(buffer.stderr.data);
       if (callbackStderr) {
-        callbackStderr(buffer.stdout.data);
+        callbackStderr(buffer.stderr.data);
       }
     }
   };
